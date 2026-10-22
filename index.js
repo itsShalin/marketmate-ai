@@ -5,41 +5,23 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
-// Temporary order storage for development.
-const orders = [];
-let nextOrderId = 1;
-
 // Allow the frontend to send requests to this backend.
 app.use(cors());
 
 // Allow the backend to read JSON request bodies.
 app.use(express.json());
 
-
- // Check whether the backend is running.
- app.get("/api/health", (req, res) => {
+// Check whether the backend is running.
+app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
     message: "MarketMate AI backend is running!",
   });
 });
 
-// Retrieve all orders.
-app.get("/api/orders", (req, res) => {
-  res.status(200).json({
-    success: true,
-    count: orders.length,
-    orders: orders,
-  });
-});
-
-
 // Receive a marketing request from the frontend.
-
 app.post("/api/agent/run", (req, res) => {
   const { businessId, request } = req.body;
-  console.log("REQUEST VALUE:", JSON.stringify(request));
-
 
   // Check whether the required information was provided.
   if (
@@ -54,31 +36,26 @@ app.post("/api/agent/run", (req, res) => {
     });
   }
 
-    // Temporary mock response until the AI service is connected.
-    return res.status(200).json({
-      success: true,
-      mock: true,
-      recommendations: [
-        {
-          type: "caption",
-          content: "Your sample marketing caption will appear here.",
-        },
-      ],
-      evidence: [],
-      confidence: 0,
-      warnings: [
-        "This is a mock response, not an AI-generated recommendation.",
-      ],
-      data_gaps: [
-        "AI service is not connected.",
-        "Business data has not been retrieved.",
-      ],
-    });
+  // Temporary mock response until the AI service is connected.
+  return res.status(200).json({
+    success: true,
+    mock: true,
+    recommendations: [
+      {
+        type: "caption",
+        content: "Your sample marketing caption will appear here.",
+      },
+    ],
+    evidence: [],
+    confidence: 0,
+    warnings: [
+      "This is a mock response, not an AI-generated recommendation.",
+    ],
+    data_gaps: [
+      "AI service is not connected.",
+      "Business data has not been retrieved.",
+    ],
   });
-
-// Temporarily test the error handler.
-app.get("/api/test-error", (req, res, next) => {
-  next(new Error("Test error"));
 });
 
 // Handle requests to routes that do not exist.
@@ -89,9 +66,8 @@ app.use((req, res) => {
   });
 });
 
-
- // Handle unexpected server errors.
- app.use((err, req, res, next) => {
+// Handle unexpected server errors.
+app.use((err, req, res, next) => {
   console.error("Server error:", err.message);
 
   if (res.headersSent) {
