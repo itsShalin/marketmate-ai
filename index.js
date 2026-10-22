@@ -54,12 +54,27 @@ app.post("/api/agent/run", (req, res) => {
     });
   }
 
-  // The AI service is not connected yet.
-  return res.status(501).json({
-    success: false,
-    message: "AI service integration is not implemented yet.",
+    // Temporary mock response until the AI service is connected.
+    return res.status(200).json({
+      success: true,
+      mock: true,
+      recommendations: [
+        {
+          type: "caption",
+          content: "Your sample marketing caption will appear here.",
+        },
+      ],
+      evidence: [],
+      confidence: 0,
+      warnings: [
+        "This is a mock response, not an AI-generated recommendation.",
+      ],
+      data_gaps: [
+        "AI service is not connected.",
+        "Business data has not been retrieved.",
+      ],
+    });
   });
-});
 
 // Temporarily test the error handler.
 app.get("/api/test-error", (req, res, next) => {
