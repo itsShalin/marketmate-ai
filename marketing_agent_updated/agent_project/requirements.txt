@@ -4,3 +4,4 @@ requests
 pydantic>=2
 fastapi
 uvicorn
+filelock>=3.13

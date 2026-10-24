@@ -2,19 +2,20 @@
 Every loop is bounded: model retries, JSON repairs, tool retries, tool steps, revision rounds, total run time."""
 import json
 import os
+import re
 import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import prompts
+from . import prompts, memory, budget
 from .llm import LLMError, call_json
 from .state import (FinalOutput, Message, Plan, ReporterOut, Recommendation, Review, RunState)
 from .tools import ENDPOINTS, call_tool
 
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "2"))
 MAX_TOOL_STEPS = int(os.getenv("MAX_TOOL_STEPS", "6"))
-RUN_TIMEOUT_S = float(os.getenv("RUN_TIMEOUT_S", "180"))
+RUN_TIMEOUT_S = float(os.getenv("RUN_TIMEOUT_S", "240"))
 LOW_STOCK = 3
 RANK = {"low": 0, "medium": 1, "high": 2}
 
@@ -35,6 +36,7 @@ def user_msg(payload):
 
 
 def check_deadline(state):
+    budget.remaining()
     if time.time() - state.started_at > RUN_TIMEOUT_S:
         raise RunTimeout(f"run exceeded {RUN_TIMEOUT_S:.0f}s")
 
@@ -50,13 +52,15 @@ def rows(data):
         data = data.get("items", [])
     return [r for r in data if isinstance(r, dict)] if isinstance(data, list) else []
 
+def _rcpt(state):
+    return lambda role, r: log(state, role, "receipt", r)
 
 # ---------- 1. Planner ----------
 def run_planner(state):
     try:
         plan, _ = call_json("planner", prompts.PLANNER,
-                            [user_msg({"request": state.request, "business_id": state.business_id})],
-                            Plan.model_validate)
+                            [user_msg({"request": state.request, "business_id": state.business_id, "remembered_preferences": state.memory_context})],
+                            Plan.model_validate, on_receipt=_rcpt(state))
     except LLMError as e:
         plan = Plan(data_needed=["profile", "products", "inventory", "engagement"],
                     success_criteria=["every draft cites data", "no out-of-stock promotion"],
@@ -79,20 +83,39 @@ def _validate_step(d):
         gaps = [str(g) for g in d.get("data_gaps", [])]
         if not drafts and not gaps:
             raise ValueError("final needs at least one draft or a data_gaps explanation")
-        return {"action": "final", "drafts": drafts, "data_gaps": gaps}
+        return {"action": "final", "drafts": drafts, "data_gaps": gaps, "selection_notes": [str(x) for x in d.get("selection_notes", [])]}
     raise ValueError("action must be 'call_tool' or 'final'")
 
 
+def fetch_planned_data(state):
+    """Execute the Planner's data selection without a model round trip per GET."""
+    by_kind = {kind: name for name, (kind, _) in ENDPOINTS.items()}
+    for kind in state.plan.data_needed:
+        if kind in state.tool_data:
+            continue
+        check_deadline(state)
+        name = by_kind[kind]
+        log(state, "orchestrator", "planned_tool_call", name)
+        result = call_tool(name, state.business_id, state.sample_mode)
+        state.tool_data[kind] = result["data"]
+        if result["source"] == "sample_fallback":
+            add_unique(state.data_gaps, f"Backend unreachable for {kind}; sample data used")
+            add_unique(state.caveats, "Backend fallback used")
+        log(state, "orchestrator", "tool_result", {"tool": name, "source": result["source"]})
+
+
 def run_analyst(state, feedback: Review | None = None):
+    fetch_planned_data(state)
     first = {"request": state.request, "plan": state.plan.model_dump(),
              "tool_results_so_far": state.tool_data,
+             "remembered_preferences": state.memory_context,
              "previous_drafts": [d.model_dump() for d in state.drafts],
              "reviewer_feedback": feedback.model_dump() if feedback else None}
     messages = [user_msg(first)]
 
     for _ in range(MAX_TOOL_STEPS):
         check_deadline(state)
-        step, raw = call_json("analyst", prompts.ANALYST, messages, _validate_step)
+        step, raw = call_json("analyst", prompts.ANALYST, messages, _validate_step, on_receipt=_rcpt(state))
         messages.append({"role": "assistant", "content": raw})
         if step["action"] == "final":
             return _accept_final(state, step)
@@ -113,7 +136,7 @@ def run_analyst(state, feedback: Review | None = None):
 
     # tool budget spent: force a final answer from what we have
     messages.append(user_msg({"instruction": "Tool budget used up. Reply now with action=final using only the data you have."}))
-    step, _ = call_json("analyst", prompts.ANALYST, messages, _validate_step)
+    step, _ = call_json("analyst", prompts.ANALYST, messages, _validate_step, on_receipt=_rcpt(state))
     if step["action"] != "final":
         raise LLMError("analyst did not finish within the tool budget")
     _accept_final(state, step)
@@ -121,6 +144,9 @@ def run_analyst(state, feedback: Review | None = None):
 
 def _accept_final(state, step):
     state.drafts = step["drafts"]
+    state.selection_notes = step.get("selection_notes", [])
+    # Revisions may resolve gaps; retain only explicit backend-fallback provenance.
+    state.data_gaps = [g for g in state.data_gaps if g.startswith("Backend unreachable for ")]
     for g in step["data_gaps"]:
         add_unique(state.data_gaps, g)
     log(state, "analyst", "draft", f"{len(state.drafts)} drafts, {len(step['data_gaps'])} data gaps")
@@ -135,11 +161,24 @@ def rule_checks(state):
     for i, d in enumerate(state.drafts):
         if not d.evidence:
             issues.append(f"Draft {i}: no evidence cited")
+        for evidence in d.evidence:
+            if not state.tool_data.get(evidence.source):
+                issues.append(f"Draft {i}: evidence cites unavailable source {evidence.source}")
         text = d.draft.lower()
+        profile_text = json.dumps(state.tool_data.get("profile", {})).lower()
+        if re.search(r"\b(visit|come|drop|stop|pick)\b.*\b(studio|store|shop|showroom|pickup|pick up)\b", text) and not any(word in profile_text for word in ("address", "studio", "storefront", "showroom", "pickup")):
+            issues.append(f"Draft {i}: physical visit or pickup is unsupported by the business profile; remove that invitation")
         for p in products:
             name = str(p.get("name", "")).strip()
             if not name or name.lower() not in text:
                 continue
+            posts = [r for r in rows(state.tool_data.get("engagement", [])) if r.get("product_id") == p.get("id")]
+            if d.suggested_time and len(posts) < 2:
+                d.confidence = _cap(d.confidence, "medium")
+                note = f"Timing for {name} is tentative: based on {len(posts)} matching historical post(s), not a demonstrated pattern."
+                add_unique(d.warnings, note)
+                if not d.suggested_time.lower().startswith("tentative:"):
+                    d.suggested_time = "Tentative: " + d.suggested_time
             stock = inv.get(p.get("id"), {}).get("stock")
             if p.get("status") in ("discontinued", "inactive"):
                 issues.append(f"Draft {i}: promotes '{name}' which is {p.get('status')}")
@@ -157,9 +196,11 @@ def run_evaluator(state) -> Review:
     profile = state.tool_data.get("profile") or {}
     payload = {"plan": state.plan.model_dump(), "brand_voice": profile.get("brand_voice"),
                "drafts": [d.model_dump() for d in state.drafts], "data_gaps": state.data_gaps,
-               "revision_round": state.revision_count}
+               "source_data": state.tool_data,
+               "selection_notes": state.selection_notes,
+               "revision_round": state.revision_count, "remembered_preferences": state.memory_context}
     try:
-        review, _ = call_json("evaluator", prompts.EVALUATOR, [user_msg(payload)], Review.model_validate, temperature=0.0)
+        review, _ = call_json("evaluator", prompts.EVALUATOR, [user_msg(payload)], Review.model_validate, temperature=0.0, on_receipt=_rcpt(state))
     except LLMError as e:
         review = Review(verdict="pass", feedback="Model review unavailable; rule checks only")
         add_unique(state.caveats, "Model review unavailable; rule checks only")
@@ -184,19 +225,30 @@ def _cap(conf, ceiling):
 def run_reporter(state, outcome: str) -> FinalOutput:
     """outcome: 'passed' | 'unresolved' (revision cap hit) | 'escalated'"""
     payload = {"outcome": outcome, "drafts": [d.model_dump() for d in state.drafts],
-               "data_gaps": state.data_gaps, "caveats": state.caveats,
+               "data_gaps": state.data_gaps, "selection_notes": state.selection_notes, "caveats": state.caveats,
                "last_review": state.reviews[-1].model_dump() if state.reviews else None}
+    if budget.remaining() < 20:
+        log(state, "reporter", "budget_fallback", "Skipping optional model report to return reviewed results")
+        return _build_final(state, outcome, ReporterOut(summary="", limitations=[]))
     try:
-        rep, _ = call_json("reporter", prompts.REPORTER, [user_msg(payload)], ReporterOut.model_validate)
+        rep, _ = call_json("reporter", prompts.REPORTER, [user_msg(payload)], ReporterOut.model_validate, on_receipt=_rcpt(state))
     except LLMError as e:
         rep = ReporterOut(summary="Drafts are ready for your review.", limitations=["Summary generated without the model"])
         log(state, "reporter", "fallback", str(e))
     return _build_final(state, outcome, rep)
 
 
+def final_summary(recs, outcome):
+    if not recs:
+        return "No recommendations are ready; check the limitations and requested information."
+    confidence = min((d.confidence for d in recs), key=RANK.get)
+    suffix = " Review issues remain unresolved." if outcome == "unresolved" else " More information is needed." if outcome == "escalated" else ""
+    return f"{len(recs)} recommendation(s) prepared for owner review. Lowest recommendation confidence: {confidence}." + suffix
+
+
 def _build_final(state, outcome, rep: ReporterOut) -> FinalOutput:
     n = len(state.drafts)
-    order = [i for i in rep.priority_order if 0 <= i < n]
+    order = list(dict.fromkeys(i for i in rep.priority_order if 0 <= i < n))
     order += [i for i in range(n) if i not in order]
     ceiling = "low" if outcome != "passed" else "medium" if (state.caveats or state.data_gaps) else "high"
     recs = []
@@ -205,14 +257,14 @@ def _build_final(state, outcome, rep: ReporterOut) -> FinalOutput:
         d.confidence = _cap(d.confidence, ceiling)
         recs.append(d)
 
-    limitations = list(rep.limitations) + [c for c in state.caveats if c not in rep.limitations]
+    limitations = list(dict.fromkeys(rep.limitations + state.selection_notes + state.data_gaps)) + [c for c in state.caveats if c not in rep.limitations]
     if outcome == "unresolved":
         limitations.append("Review issues were not fully resolved after the revision limit: "
                            + "; ".join(state.reviews[-1].issues))
-    status = ("needs_input" if outcome == "escalated" or not recs
+    status = ("needs_input" if outcome in ("escalated", "unresolved") or not recs
               else "approved_with_caveats" if outcome == "unresolved" or state.caveats or state.data_gaps
               else "approved")
-    return FinalOutput(run_id=state.run_id, status=status, summary=rep.summary, recommendations=recs,
+    return FinalOutput(run_id=state.run_id, status=status, summary=final_summary(recs, outcome), recommendations=recs,
                        data_gaps=state.data_gaps, questions_for_owner=rep.questions_for_owner,
                        limitations=limitations, revisions_used=state.revision_count)
 
@@ -223,16 +275,26 @@ def _error_final(state, reason: str) -> FinalOutput:
     rep = ReporterOut(summary="We could not finish a full analysis this time.", limitations=[reason])
     final = _build_final(state, "escalated", rep)
     final.status = "error"
+    final.summary = "Analysis could not be completed; check the limitations."
     return final
 
 
 # ---------- entry point ----------
-def run_agent(business_id: str, request: str, sample_mode: bool | None = None) -> FinalOutput:
+def _run_agent(business_id: str, request: str, sample_mode: bool | None = None) -> FinalOutput:
     if sample_mode is None:
         sample_mode = os.getenv("SAMPLE_MODE", "false").lower() == "true"
     state = RunState(run_id=uuid.uuid4().hex[:8], business_id=business_id, request=request,
                      sample_mode=sample_mode, started_at=time.time())
     try:
+        if memory.enabled():
+            try:
+                recalled = memory.recall(business_id, request)
+                state.memory_context = recalled["context"]
+                state.memory_trace = recalled
+                log(state, "hmem", "recall", recalled)
+            except memory.MemoryError as e:
+                add_unique(state.caveats, "Persistent memory unavailable; preferences could not be recalled")
+                log(state, "hmem", "unavailable", str(e))
         run_planner(state)
         run_analyst(state)
         outcome, review = "unresolved", None
@@ -252,12 +314,33 @@ def run_agent(business_id: str, request: str, sample_mode: bool | None = None) -
             log(state, "orchestrator", "revise", f"round {state.revision_count}")
             run_analyst(state, feedback=review)
         final = run_reporter(state, outcome)
-    except RunTimeout as e:
+    except (RunTimeout, budget.DeadlineExceeded) as e:
         final = _error_final(state, f"Timed out: {e}")
     except LLMError as e:
         final = _error_final(state, f"Model problem: {e}")
 
+    # Only a reusable brand field is captured; never persist inventory or model drafts as facts.
+    profile = state.tool_data.get("profile") or {}
+    if final.status != "error" and memory.enabled() and not state.sample_mode and "Backend fallback used" not in state.caveats and isinstance(profile, dict) and isinstance(profile.get("brand_voice"), str) and profile["brand_voice"].strip():
+        try:
+            saved = memory.remember(business_id, "brand_voice", profile["brand_voice"], source="backend_profile")
+            log(state, "hmem", "profile_capture", saved)
+        except (memory.MemoryError, budget.DeadlineExceeded) as e:
+            warning = "Brand preference could not be saved to persistent memory"
+            if warning not in final.limitations:
+                final.limitations.append(warning)
+            if final.status == "approved":
+                final.status = "approved_with_caveats"
+            log(state, "hmem", "unavailable", str(e))
     state.final = final.model_dump()
     Path("logs").mkdir(exist_ok=True)
     Path(f"logs/run_{state.run_id}.json").write_text(state.model_dump_json(indent=2), encoding="utf-8")
     return final
+
+
+def run_agent(business_id: str, request: str, sample_mode: bool | None = None) -> FinalOutput:
+    token = budget.deadline.set(time.monotonic() + RUN_TIMEOUT_S)
+    try:
+        return _run_agent(business_id, request, sample_mode)
+    finally:
+        budget.deadline.reset(token)
