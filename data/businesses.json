@@ -1,0 +1,261 @@
+
+{
+    "schemaVersion": "1.0.0",
+    "datasetType": "synthetic_demo_data",
+    "description": "Fictional businesses for MarketMate AI development and testing.",
+    "businesses": [
+      {
+        "businessId": "biz_cozy_candles_001",
+        "profile": {
+          "name": "Cozy Candle Co.",
+          "category": "Handmade scented candles",
+          "description": "A fictional small business selling handmade scented candles.",
+          "brand_voice": {
+            "tone": ["warm", "calm", "cozy"],
+            "keywords": ["comfort", "relaxation", "home"],
+            "avoid": ["medical claims", "guaranteed outcomes"]
+          },
+          "target_audience": ["home decor enthusiasts", "gift shoppers"],
+          "location": "Dhaka, Bangladesh",
+          "platforms": ["instagram"]
+        },
+        "products": [
+          {
+            "product_id": "prod_lavender_001",
+            "name": "Lavender Calm Candle",
+            "description": "A lavender-scented candle for a relaxing atmosphere.",
+            "category": "scented_candle",
+            "price": 650,
+            "currency": "BDT",
+            "tags": ["lavender", "relaxation", "home decor"],
+            "is_new_arrival": false,
+            "created_at": "2026-08-10"
+          },
+          {
+            "product_id": "prod_vanilla_002",
+            "name": "Vanilla Comfort Candle",
+            "description": "A warm vanilla-scented candle for everyday use.",
+            "category": "scented_candle",
+            "price": 550,
+            "currency": "BDT",
+            "tags": ["vanilla", "comfort", "gift"],
+            "is_new_arrival": false,
+            "created_at": "2026-08-15"
+          }
+        ],
+        "inventory": [
+          {
+            "product_id": "prod_lavender_001",
+            "stock_quantity": 12,
+            "status": "in_stock",
+            "last_restocked_at": "2026-10-10"
+          },
+          {
+            "product_id": "prod_vanilla_002",
+            "stock_quantity": 4,
+            "status": "low_stock",
+            "last_restocked_at": "2026-09-20"
+          }
+        ],
+        "engagement": [
+          {
+            "post_id": "post_candle_001",
+            "platform": "instagram",
+            "caption": "Bring a little lavender calm into your evening.",
+            "posted_at": "2026-10-12T18:00:00+06:00",
+            "media_type": "image",
+            "likes": 48,
+            "comments": 7,
+            "shares": 5,
+            "reach": 620,
+            "related_product_ids": ["prod_lavender_001"]
+          },
+          {
+            "post_id": "post_candle_002",
+            "platform": "instagram",
+            "caption": "Vanilla comfort for your cozy corner.",
+            "posted_at": "2026-10-15T19:00:00+06:00",
+            "media_type": "carousel",
+            "likes": 19,
+            "comments": 2,
+            "shares": 1,
+            "reach": 290,
+            "related_product_ids": ["prod_vanilla_002"]
+          },
+          {
+            "post_id": "post_candle_003",
+            "platform": "instagram",
+            "caption": "A little comfort for your home.",
+            "posted_at": "2026-10-18T17:00:00+06:00",
+            "media_type": "reel",
+            "likes": 76,
+            "comments": 12,
+            "shares": 9,
+            "reach": 980,
+            "related_product_ids": ["prod_lavender_001"]
+          }
+        ]
+      },
+      {
+        "businessId": "biz_tantuli_002",
+        "profile": {
+          "name": "Tantuli",
+          "category": "Handmade clothing and accessories",
+          "description": "A fictional small business selling handmade clothing and accessories.",
+          "brand_voice": {
+            "tone": ["friendly", "creative", "playful"],
+            "keywords": ["handmade", "everyday style", "unique"],
+            "avoid": ["unverified sustainability claims", "false scarcity"]
+          },
+          "target_audience": ["young adults", "handmade fashion shoppers"],
+          "location": "Dhaka, Bangladesh",
+          "platforms": ["instagram", "facebook"]
+        },
+        "products": [
+          {
+            "product_id": "prod_tantuli_bag_001",
+            "name": "Everyday Canvas Tote",
+            "description": "A reusable canvas tote for daily essentials.",
+            "category": "bag",
+            "price": 850,
+            "currency": "BDT",
+            "tags": ["canvas", "everyday", "tote"],
+            "is_new_arrival": true,
+            "created_at": "2026-10-15"
+          },
+          {
+            "product_id": "prod_tantuli_pouch_002",
+            "name": "Printed Mini Pouch",
+            "description": "A small printed pouch for carrying essentials.",
+            "category": "accessory",
+            "price": 350,
+            "currency": "BDT",
+            "tags": ["printed", "pouch", "gift"],
+            "is_new_arrival": false,
+            "created_at": "2026-08-25"
+          }
+        ],
+        "inventory": [
+          {
+            "product_id": "prod_tantuli_bag_001",
+            "stock_quantity": 0,
+            "status": "out_of_stock",
+            "last_restocked_at": "2026-10-01"
+          },
+          {
+            "product_id": "prod_tantuli_pouch_002",
+            "stock_quantity": 15,
+            "status": "in_stock",
+            "last_restocked_at": "2026-10-18"
+          }
+        ],
+        "engagement": [
+          {
+            "post_id": "post_tantuli_001",
+            "platform": "instagram",
+            "caption": "Meet your new everyday tote.",
+            "posted_at": "2026-10-16T17:00:00+06:00",
+            "media_type": "carousel",
+            "likes": 63,
+            "comments": 8,
+            "shares": 11,
+            "reach": 810,
+            "related_product_ids": ["prod_tantuli_bag_001"]
+          },
+          {
+            "post_id": "post_tantuli_002",
+            "platform": "facebook",
+            "caption": "Small pouch, big everyday convenience.",
+            "posted_at": "2026-10-19T16:00:00+06:00",
+            "media_type": "image",
+            "likes": 21,
+            "comments": 3,
+            "shares": 2,
+            "reach": 340,
+            "related_product_ids": ["prod_tantuli_pouch_002"]
+          }
+        ]
+      },
+      {
+        "businessId": "biz_bag_theory_003",
+        "profile": {
+          "name": "Bag Theory",
+          "category": "Bags and lifestyle accessories",
+          "description": "A fictional lifestyle shop selling practical bags and accessories.",
+          "brand_voice": {
+            "tone": ["confident", "modern", "practical"],
+            "keywords": ["everyday carry", "versatile", "organized"],
+            "avoid": ["unsupported durability claims", "unverified discounts"]
+          },
+          "target_audience": ["students", "young professionals", "commuters"],
+          "location": "Dhaka, Bangladesh",
+          "platforms": ["instagram", "facebook"]
+        },
+        "products": [
+          {
+            "product_id": "prod_bagtheory_backpack_001",
+            "name": "Metro Backpack",
+            "description": "A practical backpack for commuting and daily essentials.",
+            "category": "backpack",
+            "price": 1450,
+            "currency": "BDT",
+            "tags": ["backpack", "commute", "daily use"],
+            "is_new_arrival": true,
+            "created_at": "2026-10-12"
+          },
+          {
+            "product_id": "prod_bagtheory_sling_002",
+            "name": "Everyday Sling Bag",
+            "description": "A compact sling bag for carrying everyday essentials.",
+            "category": "sling_bag",
+            "price": 790,
+            "currency": "BDT",
+            "tags": ["sling", "compact", "everyday"],
+            "is_new_arrival": false,
+            "created_at": "2026-09-01"
+          }
+        ],
+        "inventory": [
+          {
+            "product_id": "prod_bagtheory_backpack_001",
+            "stock_quantity": 8,
+            "status": "in_stock",
+            "last_restocked_at": "2026-10-18"
+          },
+          {
+            "product_id": "prod_bagtheory_sling_002",
+            "stock_quantity": 10,
+            "status": "in_stock",
+            "last_restocked_at": "2026-10-17"
+          }
+        ],
+        "engagement": [
+          {
+            "post_id": "post_bagtheory_001",
+            "platform": "instagram",
+            "caption": "Your daily commute, a little more organized.",
+            "posted_at": "2026-10-14T18:30:00+06:00",
+            "media_type": "reel",
+            "likes": 91,
+            "comments": 14,
+            "shares": 17,
+            "reach": 1200,
+            "related_product_ids": ["prod_bagtheory_backpack_001"]
+          },
+          {
+            "post_id": "post_bagtheory_002",
+            "platform": "facebook",
+            "caption": "Keep your everyday essentials close.",
+            "posted_at": "2026-10-17T16:30:00+06:00",
+            "media_type": "image",
+            "likes": 28,
+            "comments": 4,
+            "shares": 3,
+            "reach": 410,
+            "related_product_ids": ["prod_bagtheory_sling_002"]
+          }
+        ]
+      }
+    ]
+  }
+  
