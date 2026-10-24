@@ -64,6 +64,9 @@ class RunState(BaseModel):
     request: str
     sample_mode: bool = False
     started_at: float
+    selection_notes: list[str] = Field(default_factory=list)
+    memory_context: str = ""
+    memory_trace: dict[str, Any] = Field(default_factory=dict)
     plan: Optional[Plan] = None
     tool_data: dict[str, Any] = Field(default_factory=dict)     # kind -> raw data from the backend
     drafts: list[Recommendation] = Field(default_factory=list)

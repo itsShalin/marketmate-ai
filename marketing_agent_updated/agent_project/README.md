@@ -1,3 +1,15 @@
+# Latest update
+
+Read **UPDATE_NOTES.md** first for installation over your current project and the required .env changes.
+
+# Updated: Meterless H-MEM enabled
+
+Start with **[HMEM_SETUP.md](HMEM_SETUP.md)** for setup, changed files, the restart
+demo, backend memory endpoints, tests and limitations. Node.js 24+ is required.
+Keep your existing .env: credentials are intentionally not included in this archive.
+
+---
+
 # Marketing assistant: agent layer
 
 Four agents (Planner, Analyst, Evaluator, Reporter) over one shared state. Only the Analyst uses tools.
