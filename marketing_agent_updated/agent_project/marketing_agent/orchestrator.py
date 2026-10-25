@@ -12,6 +12,7 @@ from . import prompts, memory, budget
 from .llm import LLMError, call_json
 from .state import (FinalOutput, Message, Plan, ReporterOut, Recommendation, Review, RunState)
 from .tools import ENDPOINTS, call_tool
+from .mock_data import get_mock
 
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "2"))
 MAX_TOOL_STEPS = int(os.getenv("MAX_TOOL_STEPS", "6"))
@@ -153,65 +154,196 @@ def _accept_final(state, step):
 
 
 # ---------- 3. Evaluator (LLM critic + deterministic rule checks against the raw data) ----------
+
 def rule_checks(state):
-    """Independent of the model: checks the drafts against the raw backend data."""
+    """Check drafts against backend data and saved preferences."""
     issues = []
-    inv = {r.get("product_id"): r for r in rows(state.tool_data.get("inventory", []))}
+    inv = {
+        r.get("product_id"): r
+        for r in rows(state.tool_data.get("inventory", []))
+    }
     products = rows(state.tool_data.get("products", []))
+
+    memory_text = (
+        getattr(state, "memory_context", "") or ""
+    ).casefold()
+
+    no_discount_policy = bool(
+        re.search(
+            r"\b(avoid discounts|no discounts|never offer discounts|"
+            r"do not offer discounts|don't offer discounts)\b",
+            memory_text,
+        )
+    )
+
+    catalogue_names = {
+        str(p.get("name", "")).strip().casefold()
+        for p in products
+        if str(p.get("name", "")).strip()
+    }
+    sample_products = rows(
+        get_mock(os.getenv("MOCK_SCENARIO", "normal")).get("products", [])
+    )
+    profile_text = json.dumps(
+        state.tool_data.get("profile", {})
+    ).lower()
+    engagement = rows(state.tool_data.get("engagement", []))
+
     for i, d in enumerate(state.drafts):
         if not d.evidence:
             issues.append(f"Draft {i}: no evidence cited")
+
         for evidence in d.evidence:
             if not state.tool_data.get(evidence.source):
-                issues.append(f"Draft {i}: evidence cites unavailable source {evidence.source}")
+                issues.append(
+                    f"Draft {i}: evidence cites unavailable source "
+                    f"{evidence.source}"
+                )
+
         text = d.draft.lower()
-        profile_text = json.dumps(state.tool_data.get("profile", {})).lower()
-        if re.search(r"\b(visit|come|drop|stop|pick)\b.*\b(studio|store|shop|showroom|pickup|pick up)\b", text) and not any(word in profile_text for word in ("address", "studio", "storefront", "showroom", "pickup")):
-            issues.append(f"Draft {i}: physical visit or pickup is unsupported by the business profile; remove that invitation")
+
+        if no_discount_policy and re.search(
+            r"\b(\d{1,3}\s*%\s*off|discounts?\s+of\s+\d+%|"
+            r"buy one get one|bogo|use code \w+ for \w*discount)\b",
+            text,
+        ):
+            issues.append(
+                f"Draft {i}: violates the saved no-discount preference; "
+                "remove the discount offer"
+            )
+
+        for candidate in sample_products:
+            name = str(candidate.get("name", "")).strip()
+            if (
+                name
+                and name.casefold() not in catalogue_names
+                and name.casefold() in text
+            ):
+                issues.append(
+                    f"Draft {i}: mentions unsupported product '{name}' "
+                    "not present in this business catalogue"
+                )
+
+        if re.search(
+            r"\b(visit|come|drop|stop|pick)\b.*"
+            r"\b(studio|store|shop|showroom|pickup|pick up)\b",
+            text,
+        ) and not any(
+            word in profile_text
+            for word in (
+                "address", "studio", "storefront",
+                "showroom", "pickup"
+            )
+        ):
+            issues.append(
+                f"Draft {i}: physical visit or pickup is unsupported "
+                "by the business profile; remove that invitation"
+            )
+
         for p in products:
             name = str(p.get("name", "")).strip()
             if not name or name.lower() not in text:
                 continue
-            posts = [r for r in rows(state.tool_data.get("engagement", [])) if r.get("product_id") == p.get("id")]
+
+            posts = [
+                r for r in engagement
+                if r.get("product_id") == p.get("id")
+            ]
+
             if d.suggested_time and len(posts) < 2:
                 d.confidence = _cap(d.confidence, "medium")
-                note = f"Timing for {name} is tentative: based on {len(posts)} matching historical post(s), not a demonstrated pattern."
+                note = (
+                    f"Timing for {name} is tentative: based on "
+                    f"{len(posts)} matching historical post(s), "
+                    "not a demonstrated pattern."
+                )
                 add_unique(d.warnings, note)
                 if not d.suggested_time.lower().startswith("tentative:"):
                     d.suggested_time = "Tentative: " + d.suggested_time
+
             stock = inv.get(p.get("id"), {}).get("stock")
-            if p.get("status") in ("discontinued", "inactive"):
-                issues.append(f"Draft {i}: promotes '{name}' which is {p.get('status')}")
+
+            status = str(p.get("status", "")).lower()
+
+            if status in ("discontinued", "inactive"):
+                issues.append(
+                    f"Draft {i}: promotes '{name}' which is "
+                    f"{status}"
+                )
+
+            has_low_stock_warning = any(
+                "low stock" in warning.lower()
+                or "low-stock" in warning.lower()
+                for warning in d.warnings
+            )
+
+            if status == "low_stock" and not has_low_stock_warning:
+                issues.append(
+                    f"Draft {i}: '{name}' is marked low stock in the "
+                    "product catalogue; add a low-stock warning"
+                )
+
             if stock is None:
                 if not d.warnings:
-                    issues.append(f"Draft {i}: stock for '{name}' is unknown; add a warning")
+                    issues.append(
+                        f"Draft {i}: stock for '{name}' is unknown; "
+                        "add a warning"
+                    )
             elif stock <= 0:
-                issues.append(f"Draft {i}: promotes '{name}' which is out of stock (0 units)")
-            elif stock <= LOW_STOCK and not d.warnings:
-                issues.append(f"Draft {i}: '{name}' has only {stock} units; add a low-stock warning")
-    return issues
+                issues.append(
+                    f"Draft {i}: promotes '{name}' which is out of stock "
+                    "(0 units)"
+                )
+            elif stock <= LOW_STOCK and not has_low_stock_warning:
+                issues.append(
+                    f"Draft {i}: '{name}' has only {stock} units; "
+                    "add a low-stock warning"
+                )
 
+    return issues
 
 def run_evaluator(state) -> Review:
     profile = state.tool_data.get("profile") or {}
-    payload = {"plan": state.plan.model_dump(), "brand_voice": profile.get("brand_voice"),
-               "drafts": [d.model_dump() for d in state.drafts], "data_gaps": state.data_gaps,
-               "source_data": state.tool_data,
-               "selection_notes": state.selection_notes,
-               "revision_round": state.revision_count, "remembered_preferences": state.memory_context}
+    payload = {
+        "plan": state.plan.model_dump(),
+        "brand_voice": profile.get("brand_voice"),
+        "drafts": [d.model_dump() for d in state.drafts],
+        "data_gaps": state.data_gaps,
+        "source_data": state.tool_data,
+        "selection_notes": state.selection_notes,
+        "revision_round": state.revision_count,
+        "remembered_preferences": state.memory_context,
+    }
+
     try:
-        review, _ = call_json("evaluator", prompts.EVALUATOR, [user_msg(payload)], Review.model_validate, temperature=0.0, on_receipt=_rcpt(state))
+        review, _ = call_json(
+            "evaluator",
+            prompts.EVALUATOR,
+            [user_msg(payload)],
+            Review.model_validate,
+            temperature=0.0,
+            on_receipt=_rcpt(state),
+        )
     except LLMError as e:
-        review = Review(verdict="pass", feedback="Model review unavailable; rule checks only")
-        add_unique(state.caveats, "Model review unavailable; rule checks only")
+        review = Review(
+            verdict="pass",
+            feedback="Model review unavailable; rule checks only",
+        )
+        add_unique(
+            state.caveats,
+            "Model review unavailable; rule checks only",
+        )
         log(state, "evaluator", "fallback", str(e))
 
     code_issues = rule_checks(state)
     if code_issues:
         review.issues = code_issues + review.issues
-        review.feedback = (" ".join(code_issues) + " " + review.feedback).strip()
+        review.feedback = (
+            " ".join(code_issues) + " " + review.feedback
+        ).strip()
         if review.verdict == "pass":
             review.verdict = "revise"
+
     state.reviews.append(review)
     log(state, "evaluator", "review", review.model_dump())
     return review
