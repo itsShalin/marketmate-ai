@@ -55,7 +55,7 @@ app.post("/api/agent/run", async (req, res) => {
         business_id: businessId.trim(),
         request: request.trim(),
       }),
-      signal: AbortSignal.timeout(200_000),
+      signal: AbortSignal.timeout(300_000),
     });
 
     const result = await response.json();
