@@ -22,3 +22,6 @@ marketing_agent_updated/agent_project/logs/
 **/memory/
 **/memories/
 **/generated/
+
+# H-MEM runtime state
+**/data/hmem/
