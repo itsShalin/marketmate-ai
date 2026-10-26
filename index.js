@@ -1,7 +1,7 @@
-
+﻿require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { getBusinessById } = require("./services/businessData");
+const { findBusinessById } = require("./services/businessRepository");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Check whether the backend is running.
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
   res.status(200).json({
     success: true,
     message: "MarketMate AI backend is running!",
@@ -34,7 +34,7 @@ app.post("/api/agent/run", async (req, res) => {
       message: "businessId and request are required.",
     });
   }
-  const business = getBusinessById(businessId.trim());
+  const business = await findBusinessById(businessId.trim());
   
 
   if (!business) {
@@ -73,8 +73,8 @@ app.post("/api/agent/run", async (req, res) => {
 });
 
 // Return the business profile in the format Roshni expects.
-app.get("/api/business/:id", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/business/:id", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -92,8 +92,8 @@ app.get("/api/business/:id", (req, res) => {
 });
 
 // Return products with their matching inventory status.
-app.get("/api/business/:id/products", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/business/:id/products", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -119,8 +119,8 @@ app.get("/api/business/:id/products", (req, res) => {
 });
 
 // Return inventory using Roshini's field names.
-app.get("/api/business/:id/inventory", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/business/:id/inventory", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -138,8 +138,8 @@ app.get("/api/business/:id/inventory", (req, res) => {
 });
 
 // Return engagement data with product IDs the AI can match.
-app.get("/api/business/:id/engagement", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/business/:id/engagement", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -161,8 +161,8 @@ app.get("/api/business/:id/engagement", (req, res) => {
 });
 
 // Keep the existing plural profile route for compatibility.
-app.get("/api/businesses/:id/profile", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/businesses/:id/profile", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -178,8 +178,8 @@ app.get("/api/businesses/:id/profile", (req, res) => {
 });
 
 // Keep the existing plural products route.
-app.get("/api/businesses/:id/products", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/businesses/:id/products", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -194,8 +194,8 @@ app.get("/api/businesses/:id/products", (req, res) => {
 });
 
 // Keep the existing plural inventory route.
-app.get("/api/businesses/:id/inventory", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/businesses/:id/inventory", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -210,8 +210,8 @@ app.get("/api/businesses/:id/inventory", (req, res) => {
 });
 
 // Keep the existing plural engagement route.
-app.get("/api/businesses/:id/engagement", (req, res) => {
-  const business = getBusinessById(req.params.id);
+app.get("/api/businesses/:id/engagement", async (req, res) => {
+  const business = await findBusinessById(req.params.id);
 
   if (!business) {
     return res.status(404).json({
@@ -258,3 +258,4 @@ if (require.main === module) {
 
 // Allow automated tests to import the Express app.
 module.exports = app;
+
