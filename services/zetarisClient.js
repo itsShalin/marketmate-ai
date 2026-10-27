@@ -61,6 +61,14 @@ async function query(sql, options = {}) {
     );
 
     if (!response.ok) {
+      const errorBody = await response.text();
+    
+      console.error("Zetaris request failed:", {
+        status: response.status,
+        statusText: response.statusText,
+        responseBody: errorBody,
+      });
+    
       throw new Error(`Zetaris returned HTTP ${response.status}.`);
     }
 
