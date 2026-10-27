@@ -1,5 +1,6 @@
-"""Small synthetic dataset. No real personal data. Scenarios let you test messy-data handling."""
+﻿"""Small synthetic dataset. No real personal data. Scenarios let you test messy-data handling."""
 import copy
+from pathlib import Path
 
 BASE = {
     "profile": {
@@ -32,13 +33,66 @@ BASE = {
 }
 
 
+
+def _get_demo():
+    """Load and normalize the fictional demo fixture."""
+    import json
+
+    fixture = Path(__file__).resolve().parents[1] / "demo_data" / "marketmate_demo.json"
+    with fixture.open(encoding="utf-8") as file:
+        raw = json.load(file)
+
+    profile = raw["business_profiles"][0]
+    inventory = raw["inventory"]
+    stock_by_id = {item["product_id"]: item for item in inventory}
+    products = []
+
+    for p in raw["products"]:
+        stock = stock_by_id.get(p["id"], {})
+        products.append({
+            "id": p["id"],
+            "name": p["name"],
+            "price": p["price"],
+            "category": p.get("category", "candles"),
+            "status": "low_stock" if stock.get("stock_status") == "low_stock" else p.get("status", "active"),
+        })
+
+    return {
+        "profile": {
+            "id": profile["business_id"],
+            "name": profile["name"],
+            "category": profile["business_type"],
+            "brand_voice": ", ".join(profile["brand_voice"]),
+            "audience": profile["target_audience"],
+        },
+        "products": products,
+        "inventory": inventory,
+        "engagement": [
+            {
+                "product_id": item["product_id"],
+                "type": "post",
+                "posted_at": item["post_date"],
+                "platform": item["platform"],
+                "likes": item["likes"],
+                "comments": item["comments"],
+                "reach": None,
+                "clicks": item.get("clicks", 0),
+            }
+            for item in raw["engagement"]
+        ],
+    }
+
+
 def get_mock(scenario: str = "normal") -> dict:
+    import os
+    if os.getenv("DEMO_DATA_MODE", "false").lower() == "true":
+        return _get_demo()
     d = copy.deepcopy(BASE)
     if scenario == "conflict":
-        # Catalogue says discontinued, inventory says 40 units restocked yesterday.
         d["products"][3]["status"] = "discontinued"
     elif scenario == "sparse":
         d["engagement"] = d["engagement"][:2]
         d["engagement"][1]["reach"] = None
         d["profile"]["brand_voice"] = None
     return d
+

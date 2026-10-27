@@ -278,10 +278,15 @@ def rule_checks(state):
             )
 
             if status == "low_stock" and not has_low_stock_warning:
-                issues.append(
-                    f"Draft {i}: '{name}' is marked low stock in the "
-                    "product catalogue; add a low-stock warning"
+                add_unique(
+                    d.warnings,
+                    (
+                        f"Low stock: only {stock} units of {name} are available."
+                        if stock is not None
+                        else f"Low stock: {name} is marked low stock in the catalogue."
+                    ),
                 )
+                has_low_stock_warning = True
 
             if stock is None:
                 if not d.warnings:
