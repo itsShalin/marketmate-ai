@@ -82,3 +82,19 @@ Demo limitations:
 * History is in memory only and resets on refresh.
 * The “Demo data” rows in History are fabricated samples.
 * API_BASE is http://localhost:3000/.
+
+
+
+ Future Improvements
+
+- *Live Zetaris Integration:* Improve reliability when retrieving business profiles, product data, inventory, and engagement metrics from Zetaris.
+- *Smarter AI Recommendations:* Improve the Planner, Analyst, Evaluator, and Reporter workflow to generate more accurate, brand-aligned, data-backed marketing recommendations.
+- *Platform-Specific Content:* Tailor captions, hashtags, tone, and content formats for Instagram, Facebook, and X.
+- *Persistent Brand Memory:* Remember business-owner preferences, brand voice, and promotion policies across sessions using H-MEM.
+- *Marketing Calendar:* Let business owners plan, organize, and schedule upcoming social media content.
+- *Performance Analytics:* Track engagement and campaign results to help businesses understand which content performs well.
+- *Human Review and Editing:* Allow owners to edit, approve, or reject AI-generated recommendations before using them.
+- *Improved Error Handling:* Add clearer connection-status messages, retries, and graceful fallbacks when data sources or AI services are unavailable.
+- *Multi-Business Support:* Allow users managing multiple businesses to switch between profiles and receive recommendations tailored to each one.
+
+These improvements would help make MarketMate AI more reliable, personalized, and useful for small-business marketing.
