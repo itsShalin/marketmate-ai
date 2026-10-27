@@ -25,7 +25,7 @@ cp .env.example .env
  # then fill in your values
 
 # terminal 1: AI agent
-cd agent_project && pip install -r requirements.txt && uvicorn main:app --port <AGENT_PORT>
+cd agent_project && pip install -r requirements.txt && uvicorn main:app --port 8001
 
 # terminal 2: backend
 cd backend && npm install && node index.js
@@ -36,7 +36,6 @@ cd frontend && python -m http.server 5500
 
 Open http\://localhost:5500, go to Business profile, enter the Business ID “biz\_cozy\_candles\_001” and click Save profile. Then open a new request and generate a recommendation.
 
-\<\!-- TODO (Roshni): confirm the agent start command, module name and port. \--\>
 
 ## **How it works**
 
@@ -61,8 +60,8 @@ Stack: plain HTML/CSS/JS frontend · Node.js \+ Express backend · Python \+ Fas
 ### 1\. Prerequisites
 
 * Git  
-* Node.js 18 or newer \<\!-- TODO: confirm minimum version \--\>  
-* Python 3.10 or newer \<\!-- TODO: confirm minimum version \--\>  
+* Node.js 18 or newer 
+* Python 3.10 or newer 
 * Credentials for the services in [Dependencies](https://claude.ai/chat/02d0cfb0-a7e1-42fd-be93-d798a815f676#dependencies), if you are not running on sample data
 
 ### 
@@ -138,7 +137,6 @@ python -m http.server 5500
 
 Open http\://localhost:5500. The header pill should read Backend connected. To point the frontend at a different backend, change `API_BASE` at the top of `frontend/script.js`.
 
-\<\!-- TODO: confirm the backend allows requests from http\://localhost:5500 (CORS). →
 
 ## Usage
 
@@ -231,7 +229,6 @@ The backend returns the agent's response unchanged, so the shape of recommendati
 
 ### Zetaris
 
-\<\!-- TODO (Roshni): add setup details →\>
 
 * Role: business data layer for profile, products, inventory and engagement data.  
 * Status: client and data-access layer exist, but end-to-end connectivity is still being verified. The backend uses local sample data unless `BUSINESS_DATA_SOURCE=zetaris` is set.  
@@ -239,21 +236,12 @@ The backend returns the agent's response unchanged, so the shape of recommendati
 
 ### Meterless Nightshift
 
-\<\!-- TODO (Roshni): add setup details and confirm what the demo run used →
 
 * Role: intended primary AI inference provider, with NVIDIA Nemotron models available through supported inference routes.  
 * Where it sits: `TODO: which agent steps go through it`  
 * Setup: `TODO: account, API key, install or config steps`
 
-> Document only what was actually run and tested. If a sponsor integration is incomplete, say so here.
 
-## 
-
-## Google Colab
-
-\<\!-- TODO: if any agent runs in Colab, add the link(s) and what to run. Otherwise keep the line below. \--\>
-
-The agents in this project run locally and do not require Google Colab.
 
 ## Integration status
 
