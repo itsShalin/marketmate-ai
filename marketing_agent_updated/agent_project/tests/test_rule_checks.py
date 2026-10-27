@@ -1,3 +1,4 @@
+
 import unittest
 from types import SimpleNamespace
 
@@ -93,16 +94,119 @@ class RuleChecksTests(unittest.TestCase):
             stock=4,
             status="low_stock",
         )
+
         issues = rule_checks(state)
 
         self.assertTrue(
             any(
-                "low-stock" in issue.lower()
-                or "low stock" in issue.lower()
+                "low stock" in warning.lower()
+                or "low-stock" in warning.lower()
+                for warning in state.drafts[0].warnings
+            ),
+            f"Expected a low-stock warning, got: {state.drafts[0].warnings}",
+        )
+
+        self.assertFalse(
+            any(
+                "low stock" in issue.lower()
+                or "low-stock" in issue.lower()
                 for issue in issues
             ),
-            f"Expected a low-stock issue, got: {issues}",
+            f"Warning was added but a missing-warning issue remains: {issues}",
         )
+
+    def test_catalogue_low_stock_adds_warning_to_draft(self):
+        state = self.make_state(
+            "Promote Lavender Calm Candle today!",
+            stock=4,
+            status="low_stock",
+        )
+
+        rule_checks(state)
+
+        self.assertTrue(
+            any(
+                "low stock" in warning.lower()
+                or "low-stock" in warning.lower()
+                for warning in state.drafts[0].warnings
+            ),
+            f"Expected a low-stock warning, got: {state.drafts[0].warnings}",
+        )
+
+
+    def test_low_stock_warning_preserves_existing_timing_warning(self):
+        state = self.make_state(
+            "Promote Lavender Calm Candle today!",
+            stock=4,
+            status="low_stock",
+        )
+        timing_warning = "Timing is tentative based on limited history."
+        state.drafts[0].warnings.append(timing_warning)
+
+        rule_checks(state)
+
+        self.assertIn(timing_warning, state.drafts[0].warnings)
+
+    def test_existing_low_stock_warning_is_not_duplicated(self):
+        state = self.make_state(
+            "Promote Lavender Calm Candle today!",
+            stock=4,
+            status="low_stock",
+        )
+        existing_warning = "Low stock; check availability."
+        state.drafts[0].warnings.append(existing_warning)
+
+        rule_checks(state)
+
+        low_stock_warnings = [
+            warning
+            for warning in state.drafts[0].warnings
+            if "low stock" in warning.lower()
+            or "low-stock" in warning.lower()
+        ]
+
+        self.assertEqual(
+            len(low_stock_warnings),
+            1,
+            f"Expected one low-stock warning, got: {low_stock_warnings}",
+        )
+        self.assertIn(existing_warning, low_stock_warnings)
+
+        state = self.make_state(
+            "Promote Lavender Calm Candle today!",
+            stock=4,
+            status="low_stock",
+        )
+        existing_warning = "Low stock; check availability."
+        state.drafts[0].warnings.append(existing_warning)
+
+        rule_checks(state)
+
+        low_stock_warnings = [
+            warning
+            for warning in state.drafts[0].warnings
+            if "low stock" in warning.lower()
+            or "low-stock" in warning.lower()
+        ]
+
+        self.assertEqual(
+            len(low_stock_warnings),
+            1,
+            f"Expected one low-stock warning, got: {low_stock_warnings}",
+        )
+        self.assertIn(existing_warning, low_stock_warnings)
+
+        state = self.make_state(
+            "Promote Lavender Calm Candle today!",
+            stock=4,
+            status="low_stock",
+        )
+        timing_warning = "Timing is tentative based on limited history."
+        state.drafts[0].warnings.append(timing_warning)
+
+        rule_checks(state)
+
+        self.assertIn(timing_warning, state.drafts[0].warnings)
 
     def test_saved_no_discount_preference_flags_discount_offer(self):
         state = self.make_state(
