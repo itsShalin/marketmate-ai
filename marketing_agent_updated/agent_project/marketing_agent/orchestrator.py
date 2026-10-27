@@ -261,9 +261,34 @@ def rule_checks(state):
                 if not d.suggested_time.lower().startswith("tentative:"):
                     d.suggested_time = "Tentative: " + d.suggested_time
 
+
             stock = inv.get(p.get("id"), {}).get("stock")
 
             status = str(p.get("status", "")).lower()
+
+            # Add a warning automatically when stock is low.
+            # Preserve any warnings already attached to the draft.
+            needs_low_stock_warning = (
+                status == "low_stock"
+                or (
+                    stock is not None
+                    and 0 < stock <= LOW_STOCK
+                )
+            )
+
+            if needs_low_stock_warning:
+                has_existing_low_stock_warning = any(
+                    "low stock" in warning.lower()
+                    or "low-stock" in warning.lower()
+                    for warning in d.warnings
+                )
+
+                if not has_existing_low_stock_warning:
+                    add_unique(
+                        d.warnings,
+                        "Low stock; confirm availability before promoting.",
+                    )
+
 
             if status in ("discontinued", "inactive"):
                 issues.append(

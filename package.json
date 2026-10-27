@@ -1,11 +1,10 @@
-
 {
   "name": "open-agent-hackathon",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",

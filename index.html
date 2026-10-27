@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketMate AI - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <img src="logo.png" alt="MarketMate Logo" style="width: 28px; height: 28px;">
+        </div>
+        <div class="brand-text">
+          <h2>MarketMate</h2>
+          <span>AI MARKETING ASSISTANT</span>
+          <span class="demo-badge">DEMO</span>
+        </div>
+        </div>
+
+      <nav class="sidebar-menu">
+        <button class="menu-item active" onclick="switchTab('dashboard')">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Dashboard
+        </button>
+        <button class="menu-item" onclick="switchTab('new-request')">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New request
+        </button>
+        <button class="menu-item" onclick="switchTab('history')">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          History
+        </button>
+        <button class="menu-item" onclick="switchTab('profile')">
+          <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+          Business profile
+        </button>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="help-card">
+        <h4>Know more about us</h4>
+        <p>See what MarketMate can do for your business.</p>
+        <a href="#" class="help-link" onclick="toggleAbout(event)">About MarketMate &rarr;</a>
+      </div>
+
+      <div class="user-profile">
+        <div class="avatar">U</div>
+        <div class="user-info">
+          <p class="user-name">User</p>
+          <p class="user-role">Business owner</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-wrapper">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="breadcrumb" id="headerBreadcrumb">Workspace / <span>Dashboard</span></div>
+      <div class="header-right">
+        <div class="business-badge">
+          <span>User</span>
+        </div>
+        <div class="status-pill">Checking backend...</div>
+      </div>
+    </header>
+
+    <main class="dashboard-container">
+      
+      <!-- TAB 1: DASHBOARD -->
+      <section id="view-dashboard" class="view-panel active">
+        <div class="page-title-block">
+          <h1 id="greetingTitle">Hello, User!</h1>
+          <p>Let's make something great for your business today.</p>
+        </div>
+
+        <div class="notice-box yellow hidden" id="noBusinessNotice">
+          <strong>No business selected</strong>
+          <p>Enter a Business ID in your Business profile to start generating recommendations.</p>
+          <button type="button" class="secondary-btn" onclick="switchTab('profile')">Open Business profile</button>
+        </div>
+        
+        <div class="overview-two-col">
+        <!-- Left Column: Goal Cards + Table -->
+          <div class="overview-left-column">
+            
+            <div class="section-block">
+              <div class="section-header">
+                <h2>What would you like to create?</h2>
+                <p class="section-subtext">Choose a goal to get a tailored recommendation.</p>
+              </div>
+
+              <div class="goal-action-cards">
+                <div class="action-card" onclick="startNewRequest('caption')">
+                  <div class="card-icon-box purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </div>
+                  <h4>Social caption</h4>
+                  <p>Write a scroll-stopping caption</p>
+                  <span class="card-link">Start creating &rarr;</span>
+                </div>
+
+                <div class="action-card" onclick="startNewRequest('promo')">
+                  <div class="card-icon-box green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  </div>
+                  <h4>Promo campaign</h4>
+                  <p>Promote a product or offer</p>
+                  <span class="card-link">Start creating &rarr;</span>
+                </div>
+
+                <div class="action-card" onclick="startNewRequest('stock')">
+                  <div class="card-icon-box orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                  </div>
+                  <h4>Stock update</h4>
+                  <p>Turn inventory into an action</p>
+                  <span class="card-link">Start creating &rarr;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="recent-recs-block">
+              <div class="section-header">
+                <h2>Recent recommendations</h2>
+                <p class="section-subtext">Pick up where you left off.</p>
+              </div>
+
+              <div class="table-card">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>RECOMMENDATION</th>
+                      <th>TYPE</th>
+                      <th>UPDATED</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardHistoryBody">
+                    <tr onclick="viewSavedRecommendation('Weekend flower bundle', 'Promo campaign')">
+                      <td><strong>Weekend flower bundle</strong></td>
+                      <td>Promo campaign</td>
+                      <td>&mdash;</td>
+                      <td><span class="badge badge-demo">Demo data</span></td>
+                    </tr>
+                    <tr onclick="viewSavedRecommendation('Instagram spring caption', 'Social caption')">
+                      <td><strong>Instagram spring caption</strong></td>
+                      <td>Social caption</td>
+                      <td>&mdash;</td>
+                      <td><span class="badge badge-demo">Demo data</span></td>
+                    </tr>
+                    <tr onclick="viewSavedRecommendation('Low-stock rose alert', 'Stock update')">
+                      <td><strong>Low-stock rose alert</strong></td>
+                      <td>Stock update</td>
+                      <td>&mdash;</td>
+                      <td><span class="badge badge-demo">Demo data</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="table-footer-caption">Rows marked "Demo data" are samples.</p>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Business Snapshot Box -->
+          <div class="snapshot-column">
+            <div class="snapshot-card">
+              <h3>Business snapshot <span class="badge badge-demo">Preview</span></h3>
+              <p class="snapshot-subtext">Not available in this demo. This fills in when your own data is connected.</p>
+
+              <div class="snapshot-inner-box gray">
+                <strong>Products tracked</strong>
+                <p class="muted-text">&mdash; Totals will appear once your data is connected</p>
+              </div>
+
+              <div class="snapshot-inner-box yellow">
+                <strong>Data note</strong>
+                <p>Notes about your data will appear here once it is connected.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: NEW REQUEST -->
+      <section id="view-new-request" class="view-panel">
+        <div class="page-title-block">
+          <h1>Create a new recommendation</h1>
+          <p>Tell us what your business needs. We'll use available business data to help.</p>
+        </div>
+
+        <!-- Section 1: Form View -->
+        <div class="two-column-layout" id="requestFormSection">
+          <div class="main-form-column">
+            <div class="form-section-header">
+              <h3>Choose a goal</h3>
+            </div>
+
+            <div class="goal-selection-grid">
+              <div class="goal-card active" id="goal-caption" onclick="selectGoalCard('caption')">
+                <div class="card-badge-check">Selected</div>
+                <div class="goal-icon purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <h4>Social caption</h4>
+                <p>Write copy for a social post</p>
+              </div>
+
+              <div class="goal-card" id="goal-promo" onclick="selectGoalCard('promo')">
+                <div class="card-badge-check">Selected</div>
+                <div class="goal-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <h4>Promo campaign</h4>
+                <p>Highlight an offer or product</p>
+              </div>
+
+              <div class="goal-card" id="goal-stock" onclick="selectGoalCard('stock')">
+                <div class="card-badge-check">Selected</div>
+                <div class="goal-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <h4>Stock update</h4>
+                <p>Respond to inventory changes</p>
+              </div>
+            </div>
+
+            <div class="form-card">
+              <div class="field-group">
+                <label for="userPrompt">What would you like help with?</label>
+                <p class="field-subtext">Be specific about the product, audience, or goal.</p>
+                <textarea id="userPrompt" maxlength="500" rows="3" placeholder="e.g. Create an Instagram caption for Cozy Candle Co. autumn collection." oninput="updateCharCount(this)"></textarea>
+                <div class="char-count"><span id="charNum">0</span>/500</div>
+                <div class="hidden" id="promptSuggestionsBlock">
+                  <p class="field-subtext">Suggested prompts from the assistant:</p>
+                  <div class="option-pills" id="promptSuggestions"></div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="field-group">
+                  <label for="targetAudience">Target audience (optional)</label>
+                  <input type="text" id="targetAudience" placeholder="e.g. Cozy Candle Community">
+                </div>
+              </div>
+
+              <div class="form-footer">
+                <p class="disclaimer-text">This is a demo. Recommendations are based on the business data available to the assistant, which may be sample data.</p>
+                <button type="button" id="generateBtn" class="primary-btn" onclick="submitRecommendationRequest()">Generate recommendation</button>
+              </div>
+            </div>
+
+            <!-- In-Context Workflow Loader -->
+            <div id="inContextLoader" class="loading-container-card hidden">
+              <div class="loading-content-box">
+                <div class="sparkle-icon-lg">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <h2>Putting the pieces together...</h2>
+                <p class="loading-sub">The assistant is preparing a recommendation based on your request.<br></p>
+
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="loadingProgressFill"></div>
+                </div>
+
+                <div class="figma-stages-list">
+                  <div class="figma-stage" id="stage-step-1">
+                    <div class="stage-check-icon">1</div>
+                    <span>Planning</span>
+                  </div>
+                  <div class="figma-stage" id="stage-step-2">
+                    <div class="stage-check-icon">2</div>
+                    <span>Analysing</span>
+                  </div>
+                  <div class="figma-stage" id="stage-step-3">
+                    <div class="stage-check-icon">3</div>
+                    <span>Evaluating</span>
+                  </div>
+                  <div class="figma-stage" id="stage-step-4">
+                    <div class="stage-check-icon">4</div>
+                    <span>Reporting</span>
+                  </div>
+                </div>
+
+                <p class="footer-note-text">You can keep this page open while the recommendation is generated.</p>
+              </div>
+            </div>
+
+
+            <!-- Missing data warning -->
+            <div id="missingDataState" class="state-card-box yellow hidden">
+              <div class="notice-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                A little more information is needed
+              </div>
+              <p class="state-body-text">Some business data was missing, so these recommendations may be incomplete. Check the gaps below before publishing.</p>
+              
+              <!-- filled from the response: data_gaps -->
+              <ul class="state-list" id="missingDataList"></ul>
+              <div class="state-actions">
+                <button class="secondary-btn" onclick="editPrompt()">Update prompt</button>
+                <button class="primary-btn" onclick="hideAllStates()">Dismiss</button>
+              </div>
+            </div>
+
+            <!-- No recommendations available -->
+            <div id="emptyRecsState" class="state-card-box yellow hidden">
+              <div class="notice-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                No recommendations available
+              </div>
+              <p class="state-body-text">The assistant could not put together a recommendation for this request. Try adding more detail, such as the product, the offer or the audience, and generate again.</p>
+              <!-- filled from the response: data_gaps, limitations, questions_for_owner -->
+              <ul class="state-list" id="emptyStateList"></ul>
+              <div class="state-actions">
+                <button class="secondary-btn" onclick="editPrompt()">Update prompt</button>
+                <button class="primary-btn" onclick="submitRecommendationRequest()">Try again</button>
+              </div>
+            </div>
+
+            <!-- Error / Retry State Screen -->
+            <div id="errorRetryState" class="state-card-box red hidden">
+              <div class="notice-title red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                We couldn't finish that request
+              </div>
+              <p class="state-body-text">Something went wrong while connecting to the AI service. Your original prompt is saved, so you can try again.</p>
+              <div class="state-actions">
+                <button class="primary-btn" onclick="submitRecommendationRequest()">Try again</button>
+                <button class="secondary-btn" onclick="hideAllStates()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Side Column for Form View -->
+          <div class="tips-sidebar-column">
+            <div class="tips-card">
+              <h3>Tips for better results</h3>
+              <div id="tipsList">
+                <div class="tip-item">
+                  <span class="tip-num">01</span>
+                  <div>
+                    <strong>Name the product</strong>
+                    <p>Mention the item or offer you want to promote.</p>
+                  </div>
+                </div>
+                <div class="tip-item">
+                  <span class="tip-num">02</span>
+                  <div>
+                    <strong>Add your goal</strong>
+                    <p>Reach new customers, announce a sale, or clear stock.</p>
+                  </div>
+                </div>
+                <div class="tip-item">
+                  <span class="tip-num">03</span>
+                  <div>
+                    <strong>Let evidence guide it</strong>
+                    <p>Which available data informed the suggestion.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="notice-box yellow">
+                <strong>Before you generate</strong>
+                <p id="preGenNote">Connectors and available fields may vary.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      
+        <!-- Section 2: Generated Result View  -->
+        <div id="requestResultSection" class="result-scroll-block hidden">
+          <div class="page-header-row">
+            <div>
+              <h1 id="recHeaderTitle">Your recommendation</h1>
+              <p class="subtext" id="recommendationSubhead">A draft for your business &bull; Social caption</p>
+            </div>
+            <div class="header-badges">
+              <span class="badge badge-mock hidden" id="mockBadge">Demo data</span>
+              <span class="badge badge-ready-lg" id="resStatusBadge">Draft ready</span>
+            </div>
+          </div>
+
+          <div class="two-column-layout">
+            <!-- Left Main Column: Draft + Why this recommendation + Refine Banner -->
+            <div class="main-content-column">
+              <div class="draft-card">
+                <span class="badge-type-label" id="resTypeLabel">GENERATED CAPTION</span>
+                <!-- Option 1 / Option 2 buttons: only shown when the backend returns several recommendations -->
+                <div class="option-pills hidden" id="resOptions"></div>
+                <!-- title and hashtags are optional: hidden unless they are provided -->
+                <h2 class="draft-title hidden" id="resTitle"></h2>
+                <div class="draft-body" id="resContent"></div>
+                <p class="hashtags-line hidden" id="resHashtags"></p>
+
+                <div class="rec-warnings hidden" id="resRecWarnings"></div>
+
+                <div class="draft-actions">
+                  <button class="primary-btn" onclick="copyCaptionText()">Copy caption</button>
+                  <button class="secondary-btn" id="editDraftBtn" onclick="toggleEditDraft()">Edit draft</button>
+                </div>
+              </div>
+
+              <div class="evidence-card">
+                <h3>Why this recommendation?</h3>
+                <p class="subtext">Evidence should come from connected, verified business data.</p>
+
+                <!-- filled from the response: evidence -->
+                <div class="evidence-list" id="resEvidenceList"></div>
+
+                <div class="card-divider-line"></div>
+                <!-- filled from the response: limitations -->
+                <p class="footer-muted-note" id="resEvidenceNote"></p>
+              </div>
+
+              <div class="refine-banner-box">
+                <div>
+                  <strong>Ready to refine this?</strong>
+                  <p>Edit the wording or copy the draft. Verify claims against actual business data before publishing.</p>
+                </div>
+                <button class="secondary-btn" onclick="switchTab('dashboard')">Back to dashboard</button>
+              </div>
+            </div>
+
+            <!-- Right Side Column: Warnings + Data gaps + Questions + Confidence -->
+            <div class="side-info-column">
+              <div class="notice-card yellow">
+                <div class="notice-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  Check before publishing
+                </div>
+                <!-- filled from the response: warnings -->
+                <div id="resWarningsList"></div>
+              </div>
+
+              <div class="side-card">
+                <h3>Data gaps</h3>
+                <p class="subtext" id="resGapsSubtext">No data gaps reported.</p>
+                <!-- filled from the response: data_gaps -->
+                <div class="gap-pills-row" id="resGapPills"></div>
+              </div>
+
+              <!-- filled from the response: questions_for_owner  -->
+              <div class="side-card hidden" id="resQuestionsCard">
+                <h3>Questions for you</h3>
+                <p class="subtext">Answer these to get a stronger recommendation.</p>
+                <div id="resQuestionsList"></div>
+              </div>
+
+              <div class="side-card">
+                <h3>Confidence score</h3>
+                <!-- filled from the response: confidence -->
+                <p class="subtext" id="resConfidenceText">Not provided</p>
+                <div class="confidence-bar hidden" id="resConfidenceBar">
+                  <div class="confidence-fill" id="resConfidenceFill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: HISTORY -->
+      <section id="view-history" class="view-panel">
+        <div class="page-title-block">
+          <h1>Recommendation history</h1>
+          <p>Find previous drafts and review their status.</p>
+        </div>
+
+        <div class="table-card full-width">
+          <div class="filter-bar-row">
+            <input type="text" class="search-input" id="historySearch" placeholder="Search recommendations..." oninput="filterHistory()">
+            <select class="filter-select" id="historyTypeFilter" onchange="filterHistory()">
+              <option value="all">All types</option>
+              <option value="caption">Social caption</option>
+              <option value="promo">Promo campaign</option>
+              <option value="stock">Stock update</option>
+            </select>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>RECOMMENDATION</th>
+                <th>TYPE</th>
+                <th>UPDATED</th>
+                <th>STATUS</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="fullHistoryTableBody">
+              <tr>
+                <td><strong>Weekend flower bundle</strong></td>
+                <td>Promo campaign</td>
+                <td>&mdash;</td>
+                <td><span class="badge badge-demo">Demo data</span></td>
+                <td><button class="table-link-btn" onclick="viewSavedRecommendation('Weekend flower bundle', 'Promo campaign')">Open &rarr;</button></td>
+              </tr>
+              <tr>
+                <td><strong>Instagram spring caption</strong></td>
+                <td>Social caption</td>
+                <td>&mdash;</td>
+                <td><span class="badge badge-demo">Demo data</span></td>
+                <td><button class="table-link-btn" onclick="viewSavedRecommendation('Instagram spring caption', 'Social caption')">Open &rarr;</button></td>
+              </tr>
+              <tr>
+                <td><strong>Low-stock rose alert</strong></td>
+                <td>Stock update</td>
+                <td>&mdash;</td>
+                <td><span class="badge badge-demo">Demo data</span></td>
+                <td><button class="table-link-btn" onclick="viewSavedRecommendation('Low-stock rose alert', 'Stock update')">Open &rarr;</button></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p class="table-footer-caption">New recommendations are logged at the top, while “Demo data” rows are samples.</p>
+        </div>
+      </section>
+
+      <!-- TAB 4: BUSINESS PROFILE -->
+      <section id="view-profile" class="view-panel">
+        <div class="page-title-block">
+          <h1>Business profile</h1>
+          <p>Manage the context used to tailor recommendations.</p>
+        </div>
+
+        <div class="two-column-layout">
+          <div class="main-form-column">
+            <div class="form-card">
+              <h3>Business information</h3>
+              <div class="form-row">
+                <div class="field-group">
+                  <label>Business name</label>
+                  <input type="text" id="profileName" placeholder="e.g. Cozy Candle Co.">
+                </div>
+                <div class="field-group">
+                  <label>Business type</label>
+                  <input type="text" id="profileType" placeholder="e.g. Manufacturing & Retail">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="profileBusinessId">Business ID</label>
+                <input type="text" id="profileBusinessId" placeholder="e.g. biz_cozy_candles_001">
+                <p class="field-subtext">The business ID and target audience are used in requests. Business type and brand voice are saved in this browser only and aren’t sent to the backend yet.</p>
+              </div>
+
+              <div class="field-group">
+                <label>Target audience</label>
+                <input type="text" id="profileAudience" placeholder="Community and local customers">
+              </div>
+
+              <div class="field-group">
+                <label>Brand voice</label>
+                <input type="text" id="profileVoice" placeholder="Spiritual, warm, vibrant, community-focused">
+              </div>
+
+
+              <!-- note: button limitation check -->
+              <button type="button" class="primary-btn" onclick="saveProfile()">Save profile</button>
+              <p class="table-footer-caption" id="profileSaveNote"></p>
+            </div>
+          </div>
+
+          <div class="side-info-column">
+            <div class="side-card">
+              <h3>Data connections <span class="badge badge-demo">Preview</span></h3>
+              <p class="subtext">This demo uses predefined sample business data. Connecting your own data isn't available yet.</p>
+
+              <div class="connection-status-item is-preview">
+                <div class="status-icon-off">&ndash;</div>
+                <div>
+                  <strong>Business profile</strong>
+                  <p class="subtext">Using sample data</p>
+                </div>
+              </div>
+
+              <div class="connection-status-item is-preview">
+                <div class="status-icon-off">&ndash;</div>
+                <div>
+                  <strong>Inventory data</strong>
+                  <p class="subtext">Not available in demo</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="side-card purple-light-bg">
+              <h3>Why this matters</h3>
+              <p>Business context helps tailor tone and audience, but factual claims must still be supported by evidence.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+    <div class="about-popover hidden" id="aboutPopover" role="dialog" aria-label="About MarketMate">
+    <div class="about-popover-head">
+      <strong>About MarketMate</strong>
+      <button type="button" class="about-close" onclick="closeAbout()" aria-label="Close">&times;</button>
+    </div>
+    <p>MarketMate is an AI-powered marketing assistant designed for small businesses. It turns business data into practical marketing ideas, from ready-to-use social media captions and promotional campaigns to stock-aware restock and out-of-stock updates. Our goal is to help small businesses make smarter marketing decisions with less effort.</p>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
