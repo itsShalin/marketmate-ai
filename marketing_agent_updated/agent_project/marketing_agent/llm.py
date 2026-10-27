@@ -77,12 +77,22 @@ def _chat(messages, temperature):
 
 
 def extract_json(text: str) -> dict:
-    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)   # some Nemotron versions emit reasoning
+    # Some providers omit the opening reasoning tag.
+    closes = list(re.finditer(r"</think\s*>", text, flags=re.I))
+    if closes:
+        text = text[closes[-1].end():]
+    elif re.search(r"<think\b[^>]*>", text, flags=re.I):
+        raise ValueError("unfinished reasoning block; no final answer found")
+
     text = text.replace("```json", "").replace("```", "").strip()
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end <= start:
         raise ValueError("no JSON object found in reply")
-    return json.loads(text[start:end + 1])
+
+    result = json.loads(text[start:end + 1])
+    if not isinstance(result, dict):
+        raise ValueError("expected one JSON object")
+    return result
 
 
 def call_json(role, system, messages, validate, temperature=0.2, on_receipt=None):
